@@ -103,5 +103,46 @@ describe Puppet::Type.type(:xmlfile) do
 
       expect(xmlfile.should_content).to eq("<a b='c'/>")
     end
+
+    it 'modifies the existing file without content or source' do
+      Tempfile.create('xmlfile') do |f|
+        f.write('<a><b>x</b></a>')
+        f.flush
+        catalog = Puppet::Resource::Catalog.new
+        xmlfile = testobject.new(path: f.path)
+        modification = Puppet::Type.type(:xmlfile_modification).new(
+          name: 'set b',
+          file: f.path,
+          changes: 'set /a/b "y"',
+        )
+        catalog.add_resource(xmlfile, modification)
+
+        expect(xmlfile.should_content).to eq('<a><b>y</b></a>')
+      end
+    end
+  end
+
+  describe 'retrieve' do
+    it 'manages content of the existing file without content or source' do
+      Tempfile.create('xmlfile') do |f|
+        f.write('<a/>')
+        f.flush
+        catalog = Puppet::Resource::Catalog.new
+        xmlfile = testobject.new(path: f.path, ensure: :present)
+        catalog.add_resource(xmlfile)
+        xmlfile.retrieve
+
+        expect(xmlfile[:content]).to eq('<a/>')
+      end
+    end
+
+    it 'does not manage content when ensure is absent' do
+      catalog = Puppet::Resource::Catalog.new
+      xmlfile = testobject.new(path: '/nonexistent/xmlfile.xml', ensure: :absent)
+      catalog.add_resource(xmlfile)
+      xmlfile.retrieve
+
+      expect(xmlfile[:content]).to be_nil
+    end
   end
 end

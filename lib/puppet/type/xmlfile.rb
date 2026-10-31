@@ -118,6 +118,12 @@ Puppet::Type.newtype(:xmlfile) do
     @stat = :needs_stat
   end
 
+  # Without content or source, manage the existing file plus modifications
+  def retrieve
+    self[:content] = should_content if self[:content].nil? && self[:source].nil? && self[:ensure] != :absent
+    super
+  end
+
   def exist?
     stat ? true : false
   end
@@ -203,6 +209,8 @@ Puppet::Type.newtype(:xmlfile) do
                 self[:content]
               elsif !self[:source].nil?
                 Puppet::FileServing::Content.indirection.find(self[:source], environment: catalog.environment).content
+              elsif exist?
+                File.read(self[:path]) # Modify the existing file
               else
                 '' # No content so we start with a base string.
               end
