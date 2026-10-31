@@ -4,3 +4,5 @@ Gemfile:
     ':test':
       - gem: 'compare-xml'
       - gem: 'rexml'
+spec/spec_helper_acceptance.rb:
+  unmanaged: false
