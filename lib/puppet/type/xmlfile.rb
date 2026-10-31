@@ -113,6 +113,11 @@ Puppet::Type.newtype(:xmlfile) do
     end
   end
 
+  def initialize(hash)
+    super
+    @stat = :needs_stat
+  end
+
   def exist?
     stat ? true : false
   end
